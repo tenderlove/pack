@@ -3,10 +3,10 @@
 (export pack make-packer)
 (import scheme chicken ports)
 
-(define (translate-input insns bytes)
+(define (apply-instructions insns bytes)
   (if (null? insns)
-      '()
-      (translate-input (cdr insns) ((car insns) bytes))))
+      #f
+      (apply-instructions (cdr insns) ((car insns) bytes))))
 
 (define (scan-number char)
   (let scan ((ack (list char)))
@@ -34,7 +34,7 @@
 
 (define (compile-format)
   (let ((insns (parse-format)))
-    (lambda (bytes) (translate-input insns bytes))))
+    (lambda (bytes) (apply-instructions insns bytes))))
 
 (define (make-packer format)
   (with-input-from-port (open-input-string format) compile-format))
