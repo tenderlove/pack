@@ -2,7 +2,6 @@
 
 (export pack make-packer)
 (import scheme chicken ports)
-(use srfi-14)
 
 (define (translate-input insns bytes)
   (if (null? insns)
