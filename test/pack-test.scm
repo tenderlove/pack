@@ -4,3 +4,9 @@
 
 (test "A" (pack "C" (list 65)))
 (test "AB" (pack "CC" (list 65 66)))
+(test "AB" (pack "C2" (list 65 66)))
+(test "ABC" (pack "C3" (list 65 66 67)))
+;(test '(#\C #\C) (make-packer "CC"))
+;(test '(#\C 2) (make-packer "C2"))
+;(test '(#\C 21) (make-packer "C21"))
+;(test '(#\C 21 #\A) (make-packer "C21A"))
