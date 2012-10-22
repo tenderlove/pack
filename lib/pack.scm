@@ -15,8 +15,8 @@
           (string->number (list->string (reverse ack)))
           (scan (cons (read-char) ack))))))
 
-(define (make-apply-char char)
-  (lambda (bytes) (apply-cmd char bytes)))
+(define (make-apply-command command)
+  (lambda (bytes) (apply-cmd command bytes)))
 
 (define (make-apply-num num cmd acc)
   (if (= num 0)
@@ -28,7 +28,7 @@
     (cond ((eof-object? char) acc)
           ((char-numeric? char)
            (make-apply-num (- (scan-number char) 1) (car acc) acc))
-          (else (cons (make-apply-char char) acc))))
+          (else (cons (make-apply-command char) acc))))
                                   '()
                                   read-char)))
 
@@ -41,7 +41,9 @@
 
 (define (apply-cmd command bytes)
   (let ((byte (car bytes)))
-    (cond ((char=? #\C command) (write-char (integer->char byte))))
+    (cond ((char=? #\C command)
+           (write-char (integer->char byte)))
+          (else (error "Unknown command: " command)))
     (cdr bytes)))
 
 (define (pack format bytes)
