@@ -4,12 +4,11 @@
 (import scheme chicken ports)
 (use srfi-1)
 
+;;; HELPERS
+
 (define << arithmetic-shift)
 (define (>> n count) (arithmetic-shift n (- count)))
 (define & bitwise-and)
-
-(define (apply-instructions insns bytes)
-  (for-each (lambda (fn byte) (fn byte)) insns bytes))
 
 (define (scan-number char)
   (let scan ((ack (list char)))
@@ -18,26 +17,31 @@
           (string->number (list->string (reverse ack)))
           (scan (cons (read-char) ack))))))
 
-(define (make-apply-command command)
-  (lambda (byte) (apply-pack command byte)))
-
 (define (make-apply-num num cmd acc)
   (if (= num 0)
       acc
       (make-apply-num (- num 1) cmd (cons cmd acc))))
 
-(define (parse-format)
+(define (parse-format command)
   (reverse (port-fold (lambda (char acc)
     (cond ((eof-object? char) acc)
           ((char-numeric? char)
            (make-apply-num (- (scan-number char) 1) (car acc) acc))
-          (else (cons (make-apply-command char) acc))))
+          (else (cons (command char) acc))))
                                   '()
                                   read-char)))
 
-(define (compile-format)
-  (let ((insns (parse-format)))
-    (lambda (bytes) (apply-instructions insns bytes))))
+;;; PACK
+
+(define (apply-pack-insns insns bytes)
+  (for-each (lambda (fn byte) (fn byte)) insns bytes))
+
+(define (make-pack-command command)
+  (lambda (byte) (apply-pack command byte)))
+
+(define (compile-pack)
+  (let ((insns (parse-format make-pack-command)))
+    (lambda (bytes) (apply-pack-insns insns bytes))))
 
 (define (apply-pack command byte)
   (cond ((char=? #\C command)
@@ -51,7 +55,7 @@
         (else (error "Unknown command: " command))))
 
 (define (make-packer format)
-  (with-input-from-port (open-input-string format) compile-format))
+  (with-input-from-port (open-input-string format) compile-pack))
 
 (define (pack format bytes)
   (let ((packer (make-packer format))
