@@ -74,6 +74,11 @@
 (define (apply-unpack command)
   (cond ((char=? #\C command)
          (char->integer (read-char)))
+        ((char=? #\N command)
+         (+ (<< (char->integer (read-char)) 24)
+            (<< (char->integer (read-char)) 16)
+            (<< (char->integer (read-char)) 8)
+            (char->integer (read-char))))
         (else (error "Unknown command: " command))))
 
 (define (make-unpacker format)
