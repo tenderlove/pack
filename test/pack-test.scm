@@ -9,6 +9,7 @@
 
 (test (list 65) (with-input-from-port (open-input-string "A") (make-unpacker "C")))
 (test (list 65) (unpack "C" "A"))
+(test (list 65 66 67) (unpack "C3" "ABC"))
 
 ;(test (list 65) (unpack "C" "A"))
 ;(test "\xAB\xCD\xFF\xFF" (pack "N" (list #xABCDFFFF)))
