@@ -2,7 +2,6 @@
 
 (export pack make-packer unpack make-unpacker)
 (import scheme chicken ports)
-(use srfi-1)
 
 ;;; HELPERS
 
