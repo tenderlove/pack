@@ -33,15 +33,13 @@
 
 ;;; PACK
 
-(define (apply-pack-insns insns bytes)
-  (for-each (lambda (fn byte) (fn byte)) insns bytes))
-
 (define (make-pack-command command)
   (lambda (byte) (apply-pack command byte)))
 
 (define (compile-pack)
   (let ((insns (parse-format make-pack-command)))
-    (lambda (bytes) (apply-pack-insns insns bytes))))
+    (lambda (bytes)
+      (for-each (lambda (fn byte) (fn byte)) insns bytes))))
 
 (define (apply-pack command byte)
   (cond ((char=? #\C command)
