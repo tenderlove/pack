@@ -2,6 +2,7 @@
 
 (export pack make-packer unpack make-unpacker)
 (import scheme chicken ports)
+(use srfi-69)
 
 ;;; HELPERS
 
@@ -32,28 +33,28 @@
 
 ;;; PACK
 
+(define pack-commands (alist->hash-table
+  (list (cons #\C
+              (lambda (byte)
+                (write-char (integer->char byte))))
+        (cons #\N
+              (lambda (byte)
+                (write-char (integer->char (& (>> byte 24) #xFF)))
+                (write-char (integer->char (& (>> byte 16) #xFF)))
+                (write-char (integer->char (& (>> byte 8)  #xFF)))
+                (write-char (integer->char (& byte #xFF)))))
+        (cons #\n
+              (lambda (byte)
+                (write-char (integer->char (& (>> byte 8)  #xFF)))
+                (write-char (integer->char (& byte #xFF))))))))
+
 (define (make-pack-command command)
-  (lambda (byte) (apply-pack command byte)))
+  (hash-table-ref pack-commands command))
 
 (define (compile-pack)
   (let ((insns (parse-format make-pack-command)))
     (lambda (bytes)
       (for-each (lambda (fn byte) (fn byte)) insns bytes))))
-
-(define (apply-pack command byte)
-  (cond ((char=? #\C command)
-         (write-char (integer->char byte)))
-        ((char=? #\N command)
-         (begin
-           (write-char (integer->char (& (>> byte 24) #xFF)))
-           (write-char (integer->char (& (>> byte 16) #xFF)))
-           (write-char (integer->char (& (>> byte 8)  #xFF)))
-           (write-char (integer->char (& byte #xFF)))))
-        ((char=? #\n command)
-         (begin
-           (write-char (integer->char (& (>> byte 8)  #xFF)))
-           (write-char (integer->char (& byte #xFF)))))
-        (else (error "Unknown command: " command))))
 
 (define (make-packer format)
   (with-input-from-port (open-input-string format) compile-pack))
@@ -66,26 +67,28 @@
 
 ;;; UNPACK
 
+(define unpack-commands (alist->hash-table
+  (list (cons #\C
+              (lambda () (char->integer (read-char))))
+        (cons #\N
+              (lambda ()
+                (+ (<< (char->integer (read-char)) 24)
+                   (<< (char->integer (read-char)) 16)
+                   (<< (char->integer (read-char)) 8)
+                   (char->integer (read-char)))))
+        (cons #\n
+              (lambda ()
+                (+ (<< (char->integer (read-char)) 8)
+                   (char->integer (read-char))))))))
+
+
 (define (make-unpack-command command)
-  (lambda () (apply-unpack command)))
+  (hash-table-ref unpack-commands command))
 
 (define (compile-unpack)
   (let ((insns (parse-format make-unpack-command)))
     (lambda ()
       (map (lambda (fn) (fn)) insns))))
-
-(define (apply-unpack command)
-  (cond ((char=? #\C command)
-         (char->integer (read-char)))
-        ((char=? #\N command)
-         (+ (<< (char->integer (read-char)) 24)
-            (<< (char->integer (read-char)) 16)
-            (<< (char->integer (read-char)) 8)
-            (char->integer (read-char))))
-        ((char=? #\n command)
-         (+ (<< (char->integer (read-char)) 8)
-            (char->integer (read-char))))
-        (else (error "Unknown command: " command))))
 
 (define (make-unpacker format)
   (with-input-from-port (open-input-string format) compile-unpack))
