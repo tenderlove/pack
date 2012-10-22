@@ -22,14 +22,17 @@
       acc
       (make-apply-num (- num 1) cmd (cons cmd acc))))
 
-(define (parse-format command)
-  (reverse (port-fold (lambda (char acc)
-    (cond ((eof-object? char) acc)
-          ((char-numeric? char)
-           (make-apply-num (- (scan-number char) 1) (car acc) acc))
-          (else (cons (command char) acc))))
-                                  '()
-                                  read-char)))
+(define (parse-format table)
+  (let ((lookup (lambda (key)
+                  (hash-table-ref table key
+                                  (lambda () (error "Unknown cmd: " key))))))
+    (reverse (port-fold (lambda (char acc)
+      (cond ((eof-object? char) acc)
+            ((char-numeric? char)
+             (make-apply-num (- (scan-number char) 1) (car acc) acc))
+            (else (cons (lookup char) acc))))
+                        '()
+                        read-char))))
 
 ;;; PACK
 
@@ -48,11 +51,8 @@
                 (write-char (integer->char (& (>> byte 8)  #xFF)))
                 (write-char (integer->char (& byte #xFF))))))))
 
-(define (make-pack-command command)
-  (hash-table-ref pack-commands command))
-
 (define (compile-pack)
-  (let ((insns (parse-format make-pack-command)))
+  (let ((insns (parse-format pack-commands)))
     (lambda (bytes)
       (for-each (lambda (fn byte) (fn byte)) insns bytes))))
 
@@ -81,12 +81,8 @@
                 (+ (<< (char->integer (read-char)) 8)
                    (char->integer (read-char))))))))
 
-
-(define (make-unpack-command command)
-  (hash-table-ref unpack-commands command))
-
 (define (compile-unpack)
-  (let ((insns (parse-format make-unpack-command)))
+  (let ((insns (parse-format unpack-commands)))
     (lambda ()
       (map (lambda (fn) (fn)) insns))))
 
