@@ -34,6 +34,9 @@
                         '()
                         read-char))))
 
+(define (compile-format format compiler)
+  (with-input-from-port (open-input-string format) compiler))
+
 ;;; PACK
 
 (define pack-commands (alist->hash-table
@@ -56,8 +59,7 @@
     (lambda (bytes)
       (for-each (lambda (fn byte) (fn byte)) insns bytes))))
 
-(define (make-packer format)
-  (with-input-from-port (open-input-string format) compile-pack))
+(define (make-packer format) (compile-format format compile-pack))
 
 (define (pack format bytes)
   (let ((packer (make-packer format))
@@ -86,8 +88,7 @@
     (lambda ()
       (map (lambda (fn) (fn)) insns))))
 
-(define (make-unpacker format)
-  (with-input-from-port (open-input-string format) compile-unpack))
+(define (make-unpacker format) (compile-format format compile-unpack))
 
 (define (unpack format str)
   (let ((unpacker (make-unpacker format))
