@@ -1,6 +1,6 @@
 (module pack
 
-(export pack make-packer)
+(export pack make-packer unpack make-unpacker)
 (import scheme chicken ports)
 (use srfi-1)
 
@@ -60,5 +60,28 @@
         (output (open-output-string)))
     (with-output-to-port output (lambda () (packer bytes)))
     (get-output-string output)))
+
+;;; UNPACK
+
+(define (make-unpack-command command)
+  (lambda () (apply-unpack command)))
+
+(define (compile-unpack)
+  (let ((insns (parse-format make-unpack-command)))
+    (lambda ()
+      (map (lambda (fn) (fn)) insns))))
+
+(define (apply-unpack command)
+  (cond ((char=? #\C command)
+         (char->integer (read-char)))
+        (else (error "Unknown command: " command))))
+
+(define (make-unpacker format)
+  (with-input-from-port (open-input-string format) compile-unpack))
+
+(define (unpack format str)
+  (let ((unpacker (make-unpacker format))
+        (input (open-input-string str)))
+    (with-input-from-port input unpacker)))
 
 )

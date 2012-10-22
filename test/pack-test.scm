@@ -7,6 +7,9 @@
 (test "AB" (pack "C2" (list 65 66)))
 (test "ABC" (pack "C3" (list 65 66 67)))
 
+(test (list 65) (with-input-from-port (open-input-string "A") (make-unpacker "C")))
+(test (list 65) (unpack "C" "A"))
+
 ;(test (list 65) (unpack "C" "A"))
 ;(test "\xAB\xCD\xFF\xFF" (pack "N" (list #xABCDFFFF)))
 ;(test '(#\C #\C) (make-packer "CC"))
