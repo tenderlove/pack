@@ -17,3 +17,4 @@
 (pack-unpack "C" (list 65))
 (pack-unpack "N" (list #xABCDFFFF))
 (pack-unpack "N2" (list #xABCDFFFF #xDEADBEEF))
+(pack-unpack "n4" (list #xABCD #xFFFF #xDEAD #xBEEF))

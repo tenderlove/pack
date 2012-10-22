@@ -50,6 +50,10 @@
            (write-char (integer->char (& (>> byte 16) #xFF)))
            (write-char (integer->char (& (>> byte 8)  #xFF)))
            (write-char (integer->char (& byte #xFF)))))
+        ((char=? #\n command)
+         (begin
+           (write-char (integer->char (& (>> byte 8)  #xFF)))
+           (write-char (integer->char (& byte #xFF)))))
         (else (error "Unknown command: " command))))
 
 (define (make-packer format)
@@ -78,6 +82,9 @@
          (+ (<< (char->integer (read-char)) 24)
             (<< (char->integer (read-char)) 16)
             (<< (char->integer (read-char)) 8)
+            (char->integer (read-char))))
+        ((char=? #\n command)
+         (+ (<< (char->integer (read-char)) 8)
             (char->integer (read-char))))
         (else (error "Unknown command: " command))))
 
