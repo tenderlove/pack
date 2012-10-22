@@ -19,7 +19,7 @@
           (scan (cons (read-char) ack))))))
 
 (define (make-apply-command command)
-  (lambda (byte) (apply-cmd command byte)))
+  (lambda (byte) (apply-pack command byte)))
 
 (define (make-apply-num num cmd acc)
   (if (= num 0)
@@ -39,10 +39,7 @@
   (let ((insns (parse-format)))
     (lambda (bytes) (apply-instructions insns bytes))))
 
-(define (make-packer format)
-  (with-input-from-port (open-input-string format) compile-format))
-
-(define (apply-cmd command byte)
+(define (apply-pack command byte)
   (cond ((char=? #\C command)
          (write-char (integer->char byte)))
         ((char=? #\N command)
@@ -53,9 +50,13 @@
            (write-char (integer->char (& byte #xFF)))))
         (else (error "Unknown command: " command))))
 
+(define (make-packer format)
+  (with-input-from-port (open-input-string format) compile-format))
+
 (define (pack format bytes)
   (let ((packer (make-packer format))
         (output (open-output-string)))
     (with-output-to-port output (lambda () (packer bytes)))
     (get-output-string output)))
+
 )
