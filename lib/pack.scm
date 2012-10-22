@@ -2,11 +2,14 @@
 
 (export pack make-packer)
 (import scheme chicken ports)
+(use srfi-1)
+
+(define << arithmetic-shift)
+(define (>> n count) (arithmetic-shift n (- count)))
+(define & bitwise-and)
 
 (define (apply-instructions insns bytes)
-  (if (null? insns)
-      #f
-      (apply-instructions (cdr insns) ((car insns) bytes))))
+  (for-each (lambda (fn byte) (fn byte)) insns bytes))
 
 (define (scan-number char)
   (let scan ((ack (list char)))
@@ -16,7 +19,7 @@
           (scan (cons (read-char) ack))))))
 
 (define (make-apply-command command)
-  (lambda (bytes) (apply-cmd command bytes)))
+  (lambda (byte) (apply-cmd command byte)))
 
 (define (make-apply-num num cmd acc)
   (if (= num 0)
@@ -39,12 +42,16 @@
 (define (make-packer format)
   (with-input-from-port (open-input-string format) compile-format))
 
-(define (apply-cmd command bytes)
-  (let ((byte (car bytes)))
-    (cond ((char=? #\C command)
-           (write-char (integer->char byte)))
-          (else (error "Unknown command: " command)))
-    (cdr bytes)))
+(define (apply-cmd command byte)
+  (cond ((char=? #\C command)
+         (write-char (integer->char byte)))
+        ((char=? #\N command)
+         (begin
+           (write-char (integer->char (& (>> byte 24) #xFF)))
+           (write-char (integer->char (& (>> byte 16) #xFF)))
+           (write-char (integer->char (& (>> byte 8)  #xFF)))
+           (write-char (integer->char (& byte #xFF)))))
+        (else (error "Unknown command: " command))))
 
 (define (pack format bytes)
   (let ((packer (make-packer format))
