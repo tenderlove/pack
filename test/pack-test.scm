@@ -16,10 +16,4 @@
 
 (pack-unpack "C" (list 65))
 (pack-unpack "N" (list #xABCDFFFF))
-
-;(test (list 65) (unpack "C" "A"))
-;(test "\xAB\xCD\xFF\xFF" (pack "N" (list #xABCDFFFF)))
-;(test '(#\C #\C) (make-packer "CC"))
-;(test '(#\C 2) (make-packer "C2"))
-;(test '(#\C 21) (make-packer "C21"))
-;(test '(#\C 21 #\A) (make-packer "C21A"))
+(pack-unpack "N2" (list #xABCDFFFF #xDEADBEEF))
